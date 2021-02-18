@@ -43,8 +43,9 @@ if __name__ == "__main__":
 
     alpha = float(sys.argv[1]) if len(sys.argv) > 1 else 0.5
     l1_ratio = float(sys.argv[2]) if len(sys.argv) > 2 else 0.5
-
-    with mlflow.start_run():
+    is_test = sys.argv[3] == 'y' if len(sys.argv) > 3 else False
+    
+    with mlflow.start_run() as run:
         lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
         lr.fit(train_x, train_y)
 
@@ -64,3 +65,32 @@ if __name__ == "__main__":
         mlflow.log_metric("mae", mae)
 
         mlflow.sklearn.log_model(lr, "model")
+        
+        if is_test:
+            import json
+
+            # Create some files to preserve as artifacts
+            features = "rooms, zipcode, median_price, school_rating, transport"
+            data = {"state": "TX", "Available": 25, "Type": "Detached"}
+
+            # Create couple of artifact files under the directory "data"
+            os.makedirs("data", exist_ok=True)
+            with open("data/data.json", 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+            with open("data/features.txt", 'w') as f:
+                f.write(features)
+            
+            mlflow.log_artifacts("data", artifact_path="states")
+            
+            mlflow.log_artifact(wine_path)
+            
+            mlflow.log_params({"alpha":alpha, "l1_ratio":l1_ratio})
+            mlflow.log_metrics({"rmse":rmse, "r2":r2, "mae":mae})
+            
+            mlflow.log_text("text test", "testtext.txt")
+            
+    if is_test:
+        model_uri = "runs:/{}/model".format(run.info.run_id)
+        mv = mlflow.register_model(model_uri, "ElasticNetRegressionModel")
+        print("Name: {}".format(mv.name))
+        print("Version: {}".format(mv.version))
