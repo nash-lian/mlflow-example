@@ -7,4 +7,5 @@ entry_points:
     parameters:
       alpha: float
       l1_ratio: {type: float, default: 0.1}
-    command: "python train.py {alpha} {l1_ratio}"
+      is_test: {type: str, default: 'n'}
+    command: "python train.py {alpha} {l1_ratio} {is_test}"
