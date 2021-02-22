@@ -8,3 +8,4 @@ dependencies:
   - pip
   - pip:
     - mlflow
+    - azure-storage-file-datalake>=12.2.3
